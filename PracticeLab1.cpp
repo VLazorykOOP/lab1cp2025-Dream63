@@ -27,7 +27,7 @@ void printTable(const std::vector<Entry>& data) {
     }
 }
 
-std::string errorMessage1 = "Unable to open file",
+std::string errorMessage1 = "Unable to open file: ",
 errorMessage2 = "z * z + x * y < 0. Recalc Rrz with algorithm2.",
 errorMessage3 = "x * x + z * y < 0. Recalc Rrz with algorithm3.",
 errorMessage4 = "x * x + z * y < 0. Recalc Krn with algorithm4.";
@@ -36,7 +36,8 @@ errorMessage4 = "x * x + z * y < 0. Recalc Krn with algorithm4.";
 std::vector<Entry> loadData(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
-        throw std::runtime_error("Unable to open file");
+        std::string msg = errorMessage1 + filename;
+        throw std::runtime_error(msg);
     }
 
     std::vector<Entry> data;
@@ -116,18 +117,18 @@ double a1_Srz(double x, double y, double z) {
 }
 double a1_Srs1(double x, double y, double z) {
     if (z > y) {
-        if (z * z + x * y < 0) throw std::runtime_error(errorMessage1);
+        if (z * z + x * y < 0) throw std::runtime_error(errorMessage2);
         return a1_Srz(x, y, z) + y * log(z * z + x * y);
     }
-    if (x * x + z * y < 0) throw std::runtime_error(errorMessage1);
+    if (x * x + z * y < 0) throw std::runtime_error(errorMessage3);
     return y + a1_Srz(x, y, z) * sqrt(x * x + z * y);
 }
 double a1_Srs(double x, double y, double z) {
     if (z > y) {
-        if (z * z + x * y <= 1) throw std::runtime_error(errorMessage1);
+        if (z * z + x * y <= 1) throw std::runtime_error(errorMessage2);
         return a1_Srz(x, y, z) + y * sqrt(z * z + x * y);
     }
-    if (x * x + z * y <= 1) throw std::runtime_error(errorMessage2);
+    if (x * x + z * y <= 1) throw std::runtime_error(errorMessage4);
     return y + a1_Srz(z, x, y) * sqrt(x * x + z * y);
 }
 double a1_Qrz(double x, double y) {
@@ -250,7 +251,9 @@ int main()
     }
     catch (const std::runtime_error& ex)
     {
-        if (ex.what() == errorMessage1)
+        std::cout << ex.what();
+        
+        if (((std::string)ex.what()).find(errorMessage1)!= std::string::npos)
             alg = 5;
 
         if (ex.what() == errorMessage2) 
