@@ -27,10 +27,10 @@ void printTable(const std::vector<Entry>& data) {
     }
 }
 
-std::string errorMessage1 = "Unable to open file: ",
-errorMessage2 = "z * z + x * y < 0. Recalc Rrz with algorithm2.",
-errorMessage3 = "x * x + z * y < 0. Recalc Rrz with algorithm3.",
-errorMessage4 = "x * x + z * y < 0. Recalc Krn with algorithm4.";
+std::string errorMessage1 = "Exc4. Unable to open file: ",
+errorMessage2 = "Exc1. z * z + x * y < 0. Recalc Rrz with algorithm2.",
+errorMessage3 = "Exc2. x * x + z * y < 0. Recalc Rrz with algorithm3.",
+errorMessage4 = "Exc3. x * x + z * y < 0. Recalc Krn with algorithm4.";
 
 
 std::vector<Entry> loadData(const std::string& filename) {
@@ -86,7 +86,7 @@ double getU(double x) {
                 return data[i - 1].u + (data[i].u - data[i].u) * (x - data[i - 1].x) / (data[i].x - x);
     }
     x = 0;
-    throw std::out_of_range("x is out of data range");
+    throw std::out_of_range(std::to_string(x));
 }
 double getT(double x) {
     if (abs(x) <= 1) data = loadData("dat_X_1_1.dat");
@@ -108,12 +108,18 @@ double getT(double x) {
                 return data[i-1].t + (data[i].t - data[i].t) * (x - data[i-1].x) / (data[i].x - x);
     }
 
-    throw std::out_of_range("x is out of data range");
+    throw std::out_of_range(std::to_string(x));
 }
 
 double a1_Srz(double x, double y, double z) {
-    if (x > y) return getT(x) + getU(z) - getT(y);
-    return getU(y) + getU(y) - getU(z);
+    try {
+        if (x > y) return getT(x) + getU(z) - getT(y);
+        return getU(y) + getU(y) - getU(z);
+    }
+    catch (const std::out_of_range& ex ) {
+        std::cout << "Something went wrong! No coresponding value for X " << ex.what() << " found in data range";
+        exit(2);
+    }
 }
 double a1_Srs1(double x, double y, double z) {
     if (z > y) {
@@ -227,45 +233,36 @@ int main()
 
 
     // use algorithm depending on some values
-    algs:try {
-        switch (alg)
-        {
-        case 1:
-            value = a1_fun(x, y, z);
-            break;
-        case 2:
-            value = a2_fun(x, y, z);
-            break;
-        case 3:
-            value = a3_fun(x, y, z);
-            break;
-        case 4:
-            value = a4_fun(x, y, z);
-            break;
-        case 5:
-            value = a5_fun(x, y, z);
-            break;
-        default:
-            break;
-        }
+    try {
+        // alg 1
+        value = a1_fun(x, y, z);
     }
     catch (const std::runtime_error& ex)
     {
         std::cout << ex.what();
-        
-        if (((std::string)ex.what()).find(errorMessage1)!= std::string::npos)
-            alg = 5;
+        try
+        {
+            // alg exceptions
+            if (ex.what() == errorMessage2) 
+                value = a2_fun(x, y, z);
+            
+            if (ex.what() == errorMessage3)
+                value = a3_fun(x, y, z);
 
-        if (ex.what() == errorMessage2) 
-            alg = 2;
-        
-        if (ex.what() == errorMessage3)
-            alg = 3;
+            if (ex.what() == errorMessage4)
+                value = a4_fun(x, y, z);
 
-        if (ex.what() == errorMessage4)
-            alg = 4;
+            // if file fails
+            if (((std::string)ex.what()).find(errorMessage1)!= std::string::npos)
+                value = a5_fun(x, y, z);
 
-        goto algs;
+        }
+        catch(const std::exception& e)
+        {
+            // if file fails in exceptions
+            if (((std::string)ex.what()).find(errorMessage1)!= std::string::npos)
+                value = a5_fun(x, y, z);
+        }
     }
 
     std::cout << std::endl << "Fun value: " << value;
